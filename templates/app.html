@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .hide{
+            display: none;
+        }
+        .host-tag{
+            display: inline-block;
+            padding: 3px;
+            border: 1px solid red;
+            background-color: burlywood;
+        }
+        .shadow{
+            position: fixed;
+            top: 0;
+            right:0;
+            left:0;
+            bottom:0;
+            background: black;
+            opacity: 0.6;
+            z-index: 100;
+        }
+        .add-modal,.edit-modal{
+            position: fixed;
+            height: 300px;
+            width: 400px;
+            top: 100px;
+            left: 50%;
+            z-index: 108;
+            border: 1px,solid:red;
+            background: azure;
+            margin-left: -200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>应用列表</h1>
+    <div>
+        <input id="add_app" type="button" value="添加" />
+    </div>
+    <table border="1">
+        <thead>
+        <tr>
+            <td>应用名称</td>
+            <td>应用主机列表</td>
+        </tr>
+        </thead>
+        <tbody>
+            {% for app in app_list %}
+                <tr aid={{ app.id }}>
+                    <td>{{ app.name }}</td>
+                    <td>
+                    {% for host in app.r.all %}
+                        <span class="host-tag" hid = '{{ host.nid }}' > {{ host.hostname }}</span>
+                    {% endfor %}
+                    </td>
+                    <td>
+                        <a class="edit">编辑</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <div class="shadow hide"></div>
+    <div class="add-modal hide">
+        <form id="add_form" method="POST" action="/app">
+            <div class="group">
+                <input id='app_name' type="text" placeholder="应用名称" name="app_name" />
+            </div>
+
+            <div class="group">
+                <select id='host_list' name="host_list" multiple>
+                    {% for op in host_list %}
+                        <option value="{{ op.nid }}">{{ op.hostname }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <input type="submit" value="提交" />
+            <input id="add_submit_ajax" type="button" value="Ajax提交" />
+        </form>
+    </div>
+
+
+
+
+    <div class="edit-modal hide">
+        <form id="edit_form" method="POST" action="/app">
+            <input type="text" name="nid" style="display: none"/>
+            <input type="text" placeholder="应用名称" name="app" />
+
+            <select name="host_list" multiple>
+                {% for op in host_list %}
+                <option value="{{ op.nid }}">{{ op.hostname }}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="提交" />
+            <a id="ajax_submit_edit">确认编辑</a>
+        </form>
+    </div>
+
+
+    <script src='/static/jquery-1.12.4.js'></script>
+    <script>
+        $(function() {
+            $('#add_app').click(function () {
+                $('.shadow,.add-modal').removeClass('hide');
+
+            });
+
+            $('#cancel').click(function () {
+                $('.shadow,.add-modal').addClass('hide');
+            });
+
+            $('#add_submit_ajax').click(function () {
+                $.ajax({
+                    url: '/ajax_add_app',
+                    data: $('#add_form').serialize(),
+                    type: "POST",
+                    dataType: 'JSON',
+                    traditional: true,
+                    success: function (obj) {
+                        console.log(obj)
+
+                     }
+                })
+            });
+
+
+
+            var hid_list = [];  //定义列表 hid push上来
+            $('.edit').click(function () {
+                $('.shadow,.edit-modal').removeClass('hide');
+                $(this).parent().prev().children().each(function () {
+//                    var text = $(this).text();
+                    var hid = $(this).attr('hid');
+                    hid_list.push(hid)
+
+                })
+                $('#edit_form').find('select').val(hid_list)
+            })
+        })
+    </script>
+
+
+</body>
+</html>
